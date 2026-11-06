@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jeopardy Board</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============ LANDING ============ -->
+<section id="landing" class="screen">
+  <h1 class="logo">JEOPARDY!</h1>
+  <p class="muted center">Host a game board, or join one as a contestant.</p>
+  <div class="cards">
+    <div class="card">
+      <h2>Host</h2>
+      <p class="muted">Edit the board, see answers, buzz order and manage scores.</p>
+      <button id="btnHost" class="primary big">Host a game</button>
+    </div>
+    <div class="card">
+      <h2>Contestant</h2>
+      <p class="muted">Type your name and jump in. Use the Space bar to buzz.</p>
+      <input id="joinName" placeholder="Your name" maxlength="20" autocomplete="off">
+      <button id="btnJoin" class="primary big">Join game</button>
+      <p id="joinMsg" class="muted"></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HOST ============ -->
+<section id="host" class="screen hidden">
+  <header class="bar">
+    <div class="barLeft">
+      <b id="roomCode" class="hidden"></b>
+      <button id="copyLink">Copy page link for friends</button>
+      <span id="connStatus" class="muted"></span>
+    </div>
+    <div class="barRight">
+      <label class="check"><input type="checkbox" id="editToggle"> Edit board</label>
+      <button id="resetUsed">Reset used tiles</button>
+      <button id="exportBtn">Export</button>
+      <button id="importBtn">Import</button>
+      <input type="file" id="importFile" accept="application/json" hidden>
+    </div>
+  </header>
+
+  <main class="hostLayout">
+    <div class="hostMain">
+      <div id="editTools" class="editTools hidden">
+        <button id="addCat">+ Category</button>
+        <button id="delCat">− Category</button>
+        <button id="addRow">+ Row</button>
+        <button id="delRow">− Row</button>
+        <span class="muted">Click a tile to edit its question, answer, value and images. Click a category name to rename it.</span>
+      </div>
+      <div id="hostBoard" class="board"></div>
+    </div>
+
+    <aside class="side">
+      <div class="panel">
+        <h3>Current clue</h3>
+        <div id="hostClueEmpty" class="muted">Click a tile on the board to pick a clue.</div>
+        <div id="hostClueBody" class="hidden">
+          <div class="clueMeta" id="hcMeta"></div>
+          <div class="clueBox">
+            <h4>Question</h4>
+            <p id="hcQ"></p>
+            <img id="hcQImg" class="clueImg hidden" alt="">
+          </div>
+          <div class="clueBox ans">
+            <h4>Answer <span class="muted">(only you see this until revealed)</span></h4>
+            <p id="hcA"></p>
+            <img id="hcAImg" class="clueImg hidden" alt="">
+          </div>
+          <div class="btnRow">
+            <button id="btnShowQ">Show question</button>
+            <button id="btnBuzz">Open buzzers</button>
+            <button id="btnShowA">Reveal answer</button>
+          </div>
+          <div class="btnRow">
+            <button id="btnReopen">Reopen for others</button>
+            <button id="btnClearBuzz">Clear buzzes</button>
+          </div>
+          <div class="btnRow">
+            <button id="btnDone" class="primary">Done (mark used)</button>
+            <button id="btnBack">Back (not used)</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Buzz order</h3>
+        <ol id="buzzList" class="buzzList"></ol>
+      </div>
+
+      <div class="panel">
+        <h3>Contestants</h3>
+        <label class="amountRow">Points for ± buttons:
+          <input type="number" id="amount" value="200" step="100">
+        </label>
+        <div id="playerList"></div>
+        <form id="addPlayerForm" class="addRow">
+          <input id="newPlayer" placeholder="Add contestant name" maxlength="20" autocomplete="off">
+          <button type="submit">Add</button>
+        </form>
+        <p class="muted small">Contestants can also join themselves with the room code.</p>
+      </div>
+    </aside>
+  </main>
+</section>
+
+<!-- ============ CONTESTANT ============ -->
+<section id="player" class="screen hidden">
+  <header class="bar">
+    <div class="barLeft"><b id="pName"></b> · <b id="pScore">$0</b> <span id="pStatus" class="muted"></span></div>
+    <div class="barRight"><button id="pLeave">Leave</button></div>
+  </header>
+  <main class="playerMain">
+    <div id="pBoard" class="board"></div>
+    <div id="pClue" class="playerClue hidden">
+      <div class="clueMeta" id="pcMeta"></div>
+      <p id="pcQ" class="bigText"></p>
+      <img id="pcQImg" class="clueImg hidden" alt="">
+      <div id="pcAWrap" class="clueBox ans hidden">
+        <h4>Answer</h4>
+        <p id="pcA" class="bigText"></p>
+        <img id="pcAImg" class="clueImg hidden" alt="">
+      </div>
+      <div id="pBuzzOrder" class="muted center"></div>
+    </div>
+    <div id="pScores" class="scoreboard"></div>
+  </main>
+  <div class="buzzBar">
+    <button id="buzzBtn" disabled>Buzzers locked</button>
+  </div>
+</section>
+
+<!-- ============ EDIT DIALOG ============ -->
+<dialog id="editDialog">
+  <h3 id="edTitle">Edit clue</h3>
+  <label>Value ($) <input type="number" id="edValue" step="100"></label>
+  <label>Question <textarea id="edQ" rows="3"></textarea></label>
+  <div class="imgField">
+    <span>Question image</span>
+    <input type="file" id="edQFile" accept="image/*">
+    <img id="edQPrev" class="clueImg hidden" alt="">
+    <button type="button" id="edQRemove" class="hidden">Remove image</button>
+  </div>
+  <label>Answer <textarea id="edA" rows="3"></textarea></label>
+  <div class="imgField">
+    <span>Answer image</span>
+    <input type="file" id="edAFile" accept="image/*">
+    <img id="edAPrev" class="clueImg hidden" alt="">
+    <button type="button" id="edARemove" class="hidden">Remove image</button>
+  </div>
+  <div class="btnRow">
+    <button type="button" id="edSave" class="primary">Save</button>
+    <button type="button" id="edCancel">Cancel</button>
+  </div>
+</dialog>
+
+<div id="toast" class="toast hidden"></div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
